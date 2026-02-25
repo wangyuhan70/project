@@ -1,0 +1,311 @@
+
+資料夾摘要
+SQL scripts and PHP files support a food recipe and purchasing system, featuring user management and ingredient storage tracking.
+
+* {
+    padding: 0;
+    margin: 0;
+}
+header{
+    background-color: rgba(35, 28, 26, 0.7);
+    height:80px;
+    width:100%;
+    position: fixed;/*固定search,relative=不固定*/
+}/*頁首設計*/
+h1{
+    color:transparent;
+    position:absolute;
+    left: 120px;
+    top:0;
+    height: 80px;
+    background-image:url(images/logo2-removebg-preview.png);
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-position: center;
+    background-color: transparent;
+    width: 210px;
+    text-indent: -9999px
+}/*logo design*/
+
+.news{
+    background-color: antiquewhite;
+    color:white;
+    height: 95vh;
+    background-image:url(images/宣傳照.jpeg);
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size:cover;
+    display: flex;/*auto橫向排列*/
+    flex-direction: column;/*縱向排列*/
+    align-items: center;/*水平對齊*/
+    justify-content: center;/*垂直對齊*/
+}
+.news h2{
+    font-size: 60px;
+    margin-top: 60px;
+}
+.news p{
+    color: cornsilk;
+    font-size: 18px;
+    margin:25px 0 ;/*上下外邊距加大*/
+}
+.news a{
+    color: white;
+    text-decoration:none ; 
+    border: 1px solid #ACACAC;/*加細邊框*/
+    padding: 10px 20px;/*内邊距調整*/
+    border-radius: 5px;/*圓角效果*/
+}
+.slogan{
+    background-color: #485652;
+    color:white;
+    height:250px;
+    display: flex;
+    justify-content: center;/*水平對齊*/
+    align-items: center;/*垂直對齊*/
+    font-size: 20px;
+    line-height: 1.8em;
+}
+
+.shop{
+    display: flex; 
+}
+.shop img{
+    width: 50%;
+}
+.info{
+    width: 50%;
+    background-color: white;
+    display: flex;/*auto橫向排列*/
+    flex-direction: column;/*縱向排列*/
+    align-items: center;/*水平對齊*/
+    justify-content: center;/*垂直對齊*/
+}
+.info h2{
+    font-size: 40px;
+    margin-bottom: 30px;/*拉高底部的外邊距*/
+}
+.info p{
+    text-align: center;
+    line-height: 2em;
+}
+.product{
+    background-color: rgba(255, 255, 255, 0.753);
+    display: flex;
+    justify-content:space-between;
+    align-items: center;
+    gap: 20px;                     /* 卡片之間的距離 */
+    padding: 40px;
+    flex-wrap: wrap;
+}
+.product div{
+    flex: 1 1 calc(33.333% - 20px); /* 平分三欄 */
+    max-width: 30%;
+    box-sizing: border-box;
+    text-align: center;
+}
+.product img{
+    width: 100%;
+    border-radius: 10px;
+}
+.product h3{
+    font-size: 20px;
+    margin: 20px 0;
+}
+.product p{
+    font-size: 14px;
+    line-height: 1.6em;
+}
+.newsletter{
+    background-color: #485652;
+    color:white;
+    padding: 60px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.newsletter p {
+    margin-bottom: 20px;
+}
+.newsletter input, .newsletter button{
+    background-color: transparent;
+    color:white;
+    border: 1px solid #949d9a;
+    padding: 10px;
+    border-radius: 5px;
+}
+.newsletter input{
+    width: 200px;
+    margin-right: 15px;
+}
+.newsletter button{
+    width: 80px; 
+    cursor: pointer;/*手指形狀*/
+}
+input::placeholder{
+    color:#DDDDDD ;/*提示文字顔色*/
+}
+input:focus{
+    outline: none;/*移除黑框*/
+    border-color: #E0E9A3;
+}
+/* 模態窗口樣式 */
+.modal {
+    display: none; /* 預設隱藏 */
+    position: fixed;
+    z-index: 1; /* 確保它在最上層 */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5); /* 半透明背景 */
+}
+
+/* 模態窗口內容 */
+.modal-content {
+    background-color: #fff;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 400px;
+}
+
+/* 關閉按鈕 */
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+footer{
+    background-color: black;
+    color:gray;
+    height:60px;
+    display: flex;
+    justify-content: center;/*水平對齊*/
+    justify-items: center;/*垂直對齊*/
+    font-size: 14px;
+}
+/* 漢堡按鈕樣式 */
+.menu{
+    font-size: 2rem;
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    display: block; /* 改成 block，讓它在所有螢幕上顯示 */
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 1000;
+}
+/* 預設狀態下的菜單樣式 */
+nav {
+    display: none; /* 預設隱藏菜單 */
+    position: absolute;
+    top: 80px;
+    left: 0;
+    width: 100%;
+    background-color: rgba(35, 28, 26, 0.9); /* 背景顏色 */
+    padding: 10px 0;
+    z-index: 1000;
+}
+nav ul {
+    flex-direction: column; /* 在手機版時縱向排列 */
+    gap: 1rem; /* 菜單項目間距 */
+}
+
+nav li {
+    width: 100%; /* 讓每個菜單項目占滿整個容器 */
+}
+
+nav a {
+    color: white;
+    text-decoration: none; /* 去掉文字底線 */
+    font-size: 1.2rem;
+    display: block;
+    padding: 10px;
+    text-align: center;
+}
+
+/* 滑鼠懸停時顯示底線 */
+nav a:hover {
+    text-decoration: underline;
+}
+nav.active {
+    display: flex; /* 顯示菜單 */
+}
+
+
+/*fit screen*/
+@media screen and (max-width:768px) {
+    header h1 {
+        left: 40%;
+        transform: translate3d(-50%);
+    }
+    .news h2{
+        font-size: 40px;
+    }
+    .menu{
+        display: block;
+        background-color: transparent;
+        color:white;
+        font-size: 30px;
+        position: absolute;
+        top: 15px;
+        left: 20px;
+        border: none;
+        cursor: pointer;
+    }
+    nav {
+        display: none; /* 預設隱藏菜單 */
+        position: absolute;
+        top: 80px;
+        left: 0;
+        width: 100%;
+        background-color: rgba(35, 28, 26, 0.9); /* 背景顏色 */
+        padding: 10px 0;
+        z-index: 1000;
+    }
+
+    nav.active {
+        display: flex; /* 點擊後顯示菜單 */
+    }
+    
+    nav ul {
+        flex-direction: column; /* 在手機版時縱向排列 */
+        gap: 1rem; /* 菜單項目間距 */
+    }
+
+    nav li {
+        width: 100%; /* 讓每個菜單項目占滿整個容器 */
+    }
+    .shop img{
+        width: 100%;
+    }
+    .info{
+        width: 100%;
+        padding: 40px 0;
+    }
+    .info h2{
+        font-size: 30px;
+    }
+    .product{
+        flex-direction: column;
+        padding: 60px 0;
+    }
+    .product div{
+        flex: 1 1 100%;
+        max-width: 50%;
+        margin-bottom: 30px;
+    }
+}
