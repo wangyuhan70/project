@@ -1,0 +1,79 @@
+import math
+from scipy.stats import norm
+import numpy as np
+import matplotlib.pyplot as plt
+
+def BLScall(S, K, T, r, vol):
+    d1 = (np.log(S/K) + (r + 0.5*vol*vol) * T) / (vol * np.sqrt(T))
+    d2 = d1 - vol * np.sqrt(T)
+    call = S * norm.cdf(d1) - K * np.exp(-r*T) * norm.cdf(d2)
+    return call
+
+S = 26196.73
+T = 21/365
+r = 0.01785
+K = np.array([25700,25800,25900,26000,26100,
+              26200,26300,26400,26500,26600])
+C_market = np.array([795,740,640,585,525,
+                     465,406,357,303,259])
+vols = []
+check_price = []
+
+for i in range(len(K)):
+    k = float(K[i])
+    c = float(C_market[i])
+    iv = BisectionBLS(S, k, T, r, c)
+    vols.append(iv)
+    check_price.append(BLScall(S, k, T, r, iv))
+
+vols = np.array(vols)
+check_price = np.array(check_price)
+
+def BisectionBLS(S, K, T, r, call, tol=1e-6, max_iter=100):
+    left = 1e-8
+    right = 3.0   # 允許波動率最大 300%
+    for _ in range(max_iter):
+        mid = (left + right) / 2
+        price_mid = BLScall(S, K, T, r, mid)
+
+        if abs(price_mid - call) < tol:
+            return mid
+        if (BLScall(S, K, T, r, left) - call) * (price_mid - call) < 0:
+            right = mid
+        else:
+            left = mid
+    return (left + right) / 2
+
+def MCsim_accumulate(S, T, r, vol, N, M):
+    dt = T / N
+    Z = np.random.normal(0, 1, (M, N))
+    increments = np.exp((r - 0.5 * vol**2) * dt + vol * np.sqrt(dt) * Z)
+    St = np.multiply.accumulate(increments, axis=1)
+    St = np.hstack((np.ones((M,1)), St)) * S
+    return St
+
+MC_price = []
+
+for i in range(len(K)):
+    k = float(K[i])
+    market_price = float(C_market[i])
+    vol = BisectionBLS(S, k, T, r, market_price)
+    St = MCsim_accumulate(S, T, r, vol, 21, 10000)
+
+    call = np.mean(np.maximum(St[:,-1] - k, 0)) * math.exp(-r*T)
+
+    MC_price.append(call)
+
+    print(f"K={k}, Market={market_price}, MC Price={call:.2f}, IV={vol:.4f}")
+
+plt.plot(St.transpose())
+plt.show()
+
+plt.figure(figsize=(8,6))
+plt.plot(K, vols, marker='o', linestyle='-', color='b', label="Implied Volatility")
+plt.xlabel("Strike Price (K)")
+plt.ylabel("Implied Volatility")
+plt.title("Volatility Smile")
+plt.grid(True, linestyle="--", alpha=0.6)
+plt.legend()
+plt.show()
