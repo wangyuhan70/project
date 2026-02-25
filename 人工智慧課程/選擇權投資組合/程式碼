@@ -1,0 +1,65 @@
+import matplotlib.pyplot as plt
+import numpy as np
+CALLprice = {24800:980,24900:905,25000:810,25100:735,25200:670,25300:605,25400:545,25500:486,25600:428,25700:380,25800:327,25900:283,26000:247,26100:213}
+PUTprice = {24800:280,24900:310,25000:333,25100:365,25200:411,25300:432,25400:456,25500:510,25600:550,25700:625,25800:685,25900:745,26000:790,26100:850}
+
+ST = np.arange(24000,27000)
+
+def OptionProfit(pos):
+  callpos = pos[0]
+  putpos = pos[1]
+  profit = np.zeros(ST.shape)
+  for position in callpos:
+    K = position[0]
+    N = position[1]
+    C = CALLprice[K]
+    profit = profit + (np.maximum(ST-K,0)-C)*N
+  for position in putpos:
+    K = position[0]
+    N = position[1]
+    P = PUTprice[K]
+    profit = profit + (np.maximum(K-ST,0)-P)*N
+  return profit
+
+pos1 = [[],[[25000,1],[25400,-2],[25800,1]]]
+
+p1 = OptionProfit(pos1)
+plt.plot(ST,p1,'b-',[ST[0],ST[-1]],[0,0],'k--')
+
+pos1 = [[[24900,1],[26000,-1]],[]]
+pos2=[[],[[24800,1],[25500,-1]]]
+
+p1 = OptionProfit(pos1)
+p2 = OptionProfit(pos2)
+plt.plot(ST,p1,'b-',[ST[0],ST[-1]],[0,0],'k--')
+plt.plot(ST,p2,'r-',[ST[0],ST[-1]],[0,0],'k--')
+
+pos1 = [[[25400,1],[25500,-2],[25600,1]],[]]
+pos2=[[],[[25400,1],[25500,-2],[25600,1]]]
+pos3=[[[25500,-1]],[[25000,-1]]]
+
+p1 = OptionProfit(pos1)
+p2 = OptionProfit(pos2)
+p3 = OptionProfit(pos3)
+plt.plot(ST,p1,'b-',[ST[0],ST[-1]],[0,0],'k--')
+plt.plot(ST,p2,'g-',[ST[0],ST[-1]],[0,0],'k--')
+plt.plot(ST,p3,'r-',[ST[0],ST[-1]],[0,0],'k--')
+
+pos1 = [[[26000,1]],[[25000,1]]]
+pos2=[[[25800,1]],[[25200,1]]]
+pos3=[[[25500,1]],[[25500,1]]]
+
+p1 = OptionProfit(pos1)
+p2 = OptionProfit(pos2)
+p3 = OptionProfit(pos3)
+plt.plot(ST,p1,'b-',[ST[0],ST[-1]],[0,0],'k--')
+plt.plot(ST,p2,'g-',[ST[0],ST[-1]],[0,0],'k--')
+plt.plot(ST,p3,'r-',[ST[0],ST[-1]],[0,0],'k--')
+
+pos1 = [[[24800,-1]],[[24800,1]]]
+pos2=[[[25900,1]],[[25900,-1]]]
+
+p1 = OptionProfit(pos1)
+p2 = OptionProfit(pos2)
+plt.plot(ST,p1,'b-',[ST[0],ST[-1]],[0,0],'k--')
+plt.plot(ST,p2,'g-',[ST[0],ST[-1]],[0,0],'k--')
