@@ -1,0 +1,94 @@
+import io
+text= """2
+10
+buy 5 shares at 100
+buy 5 shares at 105
+sell 3 shares at 102
+sell 5 shares at 105
+buy 10 shares at 101
+sell 12 shares at 100
+buy 2 shares at 103
+sell 2 shares at 104
+buy 1 shares at 102
+sell 1 shares at 103
+12
+buy 10 shares at 200
+sell 5 shares at 210
+buy 5 shares at 205
+sell 8 shares at 205
+buy 10 shares at 208
+sell 2 shares at 207
+buy 5 shares at 210
+sell 5 shares at 210
+sell 5 shares at 215
+buy 3 shares at 212
+sell 3 shares at 212
+buy 2 shares at 213"""
+
+f=io.StringIO(text)
+T=int(f.readline())
+for t in range (T):
+  N=int(f.readline())
+  buy=[]
+  sell=[]
+  stockprice=-1
+  for n in range(N):
+    str=f.readline().split()
+    share=int(str[1])
+    price=int(str[-1])
+
+    if str[0]=="buy":
+      while len(sell)>0:
+        order=sell[0]
+        if order[0]>price:
+          break
+        dealamount=min(order[1],share)
+        stockprice=order[0]
+        order[1]-=dealamount
+        share-=dealamount
+        if order[1]==0:
+          del sell[0]
+        if share==0:
+          break
+      if share>0:
+        i=0
+        while(i<len(buy) and price<buy[i][0]):
+          i+=1
+        if (i<len(buy) and price==buy[i][0]):
+          buy[i][1]+=share
+        else:
+          buy.insert(i,[price,share])
+    else:
+      while len(buy)>0:
+        order=buy[0]
+        if order[0]<price:
+          break
+        dealamount=min(order[1],share)
+        stockprice=order[0]
+        order[1]-=dealamount
+        share-=dealamount
+        if order[1]==0:
+          del buy[0]
+        if share==0:
+          break
+      if share>0:
+        k=0
+        while(k<len(sell) and price>sell[k][0]):
+          k+=1
+        if (k<len(sell) and price==sell[k][0]):
+          sell[k][1]+=share
+        else:
+          sell.insert(k,[price,share])
+
+    if not sell:
+        print('-',end=' ')
+    else:
+        print(sell[0][0], end=' ')
+    if not buy:
+        print('-',end=' ')
+    else:
+        print(buy[0][0], end=' ')
+    if stockprice == -1:
+        print('-')
+    else:
+        print(stockprice)
