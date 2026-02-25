@@ -1,0 +1,101 @@
+import pandas as pd
+import numpy as np
+
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import train_test_split, RandomizedSearchCV, KFold
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+
+
+df = pd.read_excel('NBA_First2Years_1980_2010_MERGED3.xlsx')
+
+exclude_players = [
+    'LeBron James','Chris Paul','Kyle Lowry','P.J. Tucker','Kevin Durant',
+    'Al Horford','Mike Conley','Jeff Green','Russell Westbrook','Kevin Love',
+    'Brook Lopez','Eric Gordon','Nicolas Batum','DeAndre Jordan','James Harden',
+    'Stephen Curry','DeMar DeRozan','Jrue Holiday','Paul George'
+]
+
+df_g = df[(~df['Player'].isin(exclude_players)) & (df['season'] > 1)]
+
+feature_cols=['2P%','2PA','3P','3P%','3PA','3PAr','AST','AST%','BLK','BLK%','BPM','DBPM','DRB','DRB%','DWS','DraftRank','FG','FG%','FGA','FT','FT%','FTA','FTr','OBPM','ORB','ORB%','OWS','PER','PF','PTS','Pos_C','Pos_PF','Pos_PG','Pos_SF','Pos_SG','STL','STL%','TOV','TOV%','TRB','TRB%','TS%','USG%','VORP','WS','WS/48','eFG%','Is_Undrafted']
+target_col = 'Advanced_WS/48'
+
+
+data = df_g.dropna(subset=feature_cols + [target_col])
+
+X = data[feature_cols]
+y = data[target_col]
+
+# 固定一個 test set，調參只在 train 做 CV（避免偷看）
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+# 定義評估函數
+
+def eval_regression(y_true, y_pred, name="Model"):
+    mse = mean_squared_error(y_true, y_pred)
+    rmse = np.sqrt(mse)
+    mae = mean_absolute_error(y_true, y_pred)
+    r2 = r2_score(y_true, y_pred)
+    print(f"\n[{name}]")
+    print("RMSE:", rmse)
+    print("MAE :", mae)
+    print("R²  :", r2)
+    return rmse, mae, r2
+
+
+# Random Forest + 隨機搜尋調參
+rf = RandomForestRegressor(random_state=42, n_jobs=-1)
+
+param_dist = {
+    "n_estimators": [200, 300, 500, 800, 1000],
+    "max_depth": [None, 3, 4, 5, 6, 8, 10],
+    "min_samples_split": [2, 5, 10, 20],
+    "min_samples_leaf": [1, 2, 4, 8, 12],
+    "max_features": ["sqrt", "log2", 0.3, 0.5, 0.7, 1.0],
+    "bootstrap": [True, False]
+}
+
+cv = KFold(n_splits=5, shuffle=True, random_state=42)
+
+search = RandomizedSearchCV(
+    estimator=rf,
+    param_distributions=param_dist,
+    n_iter=50,                     
+    scoring="r2",  
+    cv=cv,
+    random_state=42,
+    n_jobs=-1,
+    verbose=1,
+    return_train_score=True
+)
+
+search.fit(X_train, y_train)
+
+
+# 輸出最佳參數與 CV 表現
+print("\nBest Params:")
+print(search.best_params_)
+
+best_r2_cv = -search.best_score_
+print("\nBest CV R^2:", best_r2_cv)
+
+
+# 用最佳模型做 train/test 評估（看過擬合）
+best_model = search.best_estimator_
+
+y_pred_train = best_model.predict(X_train)
+y_pred_test = best_model.predict(X_test)
+
+eval_regression(y_train, y_pred_train, "Best RF - Train")
+eval_regression(y_test, y_pred_test, "Best RF - Test")
+
+train_r2 = np.sqrt(mean_squared_error(y_train, y_pred_train))
+test_r2 = np.sqrt(mean_squared_error(y_test, y_pred_test))
+print("\nOverfitting Check")
+print("RMSE gap (test - train):", test_rmse - train_rmse)
+
+# 特徵重要度
+importances = pd.Series(best_model.feature_importances_, index=feature_cols).sort_values(ascending=False)
+print("\nFeature Importances (Top 10):")
+print(importances.head(10))
