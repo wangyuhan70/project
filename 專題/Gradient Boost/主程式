@@ -1,0 +1,126 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.model_selection import train_test_split, GridSearchCV, KFold
+from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
+
+
+df = pd.read_excel('NBA_First2Years_1980_2010_MERGED3.xlsx')
+
+exclude_players = [
+    'LeBron James','Chris Paul','Kyle Lowry','P.J. Tucker','Kevin Durant',
+    'Al Horford','Mike Conley','Jeff Green','Russell Westbrook','Kevin Love',
+    'Brook Lopez','Eric Gordon','Nicolas Batum','DeAndre Jordan','James Harden',
+    'Stephen Curry','DeMar DeRozan','Jrue Holiday','Paul George'
+]
+
+df_g = df[(~df['Player'].isin(exclude_players)) & (df['season'] > 1)]
+
+feature_cols=['2P%','2PA','3P','3P%','3PA','3PAr','AST','AST%','BLK','BLK%','BPM','DBPM','DRB','DRB%','DWS','DraftRank','FG','FG%','FGA','FT','FT%','FTA','FTr','OBPM','ORB','ORB%','OWS','PER','PF','PTS','Pos_C','Pos_PF','Pos_PG','Pos_SF','Pos_SG','STL','STL%','TOV','TOV%','TRB','TRB%','TS%','USG%','VORP','WS','WS/48','eFG%','Is_Undrafted']
+target_col = 'Advanced_WS/48'
+
+
+data = df_g.dropna(subset=feature_cols + [target_col])
+
+X = data[feature_cols]
+y = data[target_col]
+
+# 切 train/test（test 不參與調參）
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+
+# 建立模型 + GridSearch（用 R²）
+gbr = GradientBoostingRegressor(random_state=42)
+
+param_grid = {
+    "n_estimators": [100, 200, 300, 500],
+    "learning_rate": [0.01, 0.05, 0.1],
+    "max_depth": [2, 3, 4],             
+    "min_samples_leaf": [1, 2, 4, 8],
+    "subsample": [0.6, 0.8, 1.0]         
+}
+
+cv = KFold(n_splits=5, shuffle=True, random_state=42)
+
+grid = GridSearchCV(
+    estimator=gbr,
+    param_grid=param_grid,
+    scoring="r2",                
+    cv=cv,
+    n_jobs=-1,
+    verbose=1,
+    return_train_score=True
+)
+
+grid.fit(X_train, y_train)
+
+print("\nBest Params:", grid.best_params_)
+print("Best CV R²:", grid.best_score_)
+
+best_model = grid.best_estimator_
+
+
+# 評估（Train/Test）
+y_train_pred = best_model.predict(X_train)
+y_test_pred  = best_model.predict(X_test)
+
+def report(y_true, y_pred, name=""):
+    mse = mean_squared_error(y_true, y_pred)
+    rmse = np.sqrt(mse)
+    mae = mean_absolute_error(y_true, y_pred)
+    r2 = r2_score(y_true, y_pred)
+    print(f"\n[{name}]")
+    print("RMSE:", rmse)
+    print("MAE :", mae)
+    print("R²  :", r2)
+    return r2
+
+r2_train = report(y_train, y_train_pred, "GBR - Train")
+r2_test  = report(y_test,  y_test_pred,  "GBR - Test")
+print("\nOverfitting Gap (Train - Test R²):", r2_train - r2_test)
+
+
+# 畫圖：每個參數 vs CV R²
+cv_results = pd.DataFrame(grid.cv_results_)
+score_col = "mean_test_score"      
+train_col = "mean_train_score"
+
+param_cols = [c for c in cv_results.columns if c.startswith("param_")]
+
+for p in param_cols:
+    plt.figure(figsize=(8, 5))
+    x = cv_results[p]
+    y_cv = cv_results[score_col]
+    y_tr = cv_results[train_col]
+
+    # 判斷是否數值型
+    x_num = pd.to_numeric(x, errors="coerce")
+    numeric_ratio = x_num.notna().mean()
+
+    if numeric_ratio >= 0.8:
+        # 數值：散點 + 平均趨勢
+        plt.scatter(x_num, y_cv, alpha=0.6, label="CV R²")
+        plt.scatter(x_num, y_tr, alpha=0.3, label="Train R²")
+        grp = pd.DataFrame({"x": x_num, "cv": y_cv}).dropna().groupby("x")["cv"].mean().sort_index()
+        if len(grp) >= 2:
+            plt.plot(grp.index, grp.values, linewidth=2)
+        plt.xlabel(p.replace("param_", ""))
+    else:
+        # 類別：箱型圖（按中位數排序）
+        tmp = pd.DataFrame({"x": x.astype(str), "cv": y_cv})
+        order = tmp.groupby("x")["cv"].median().sort_values(ascending=False).index.tolist()
+        data_box = [tmp[tmp["x"] == cat]["cv"].values for cat in order]
+        plt.boxplot(data_box, labels=order, showfliers=False)
+        plt.xticks(rotation=45, ha="right")
+        plt.xlabel(p.replace("param_", ""))
+
+    plt.ylabel("R²")
+    plt.title(f"GBR: {p.replace('param_', '')} vs R² (Train & CV)")
+    plt.grid(True)
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
