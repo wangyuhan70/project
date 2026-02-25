@@ -1,0 +1,237 @@
+
+資料夾摘要
+SQL scripts and PHP files support a food recipe and purchasing system, featuring user management and ingredient storage tracking.
+
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>好煮藝</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* 彈出式模態窗口 */
+        .modal {
+            display: none; /* 預設隱藏 */
+            position: fixed;
+            z-index: 9999; /* 確保它顯示在頁面最上層 */
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); /* 半透明背景 */
+        }
+
+        .modal-content {
+            background-color: #fff;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%; /* 根據需求調整寬度 */
+            max-width: 400px;
+            border-radius: 10px;
+            z-index: 10000; /* 確保它在最前面 */
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        /* 修改會員專區按鈕樣式 */
+        #member-section {
+            cursor: pointer;
+        }
+        /* 調整表單的對齊方式 */
+        .modal-content form input,.modal-content form button {
+            width: 100%; /* 讓所有元素都佔滿整行 */
+        }
+        /* 調整登入/註冊表單 */
+        .modal-content form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px; /* 讓每一行間距調整 */
+        }
+
+        .modal-content input {
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        .modal-content button {
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .modal-content button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+   
+    <header>
+        <button class="menu">&#9776;</button>
+        <h1>智慧食譜與線上採買系統</h1> 
+    </header>
+    <nav>
+        <ul>
+            <li><a href="#">關於我們</a></li>
+            <li><a href="#">最新消息</a></li>
+            <li><a href="#" id="member-section">會員專區</a></li>
+            <li><a href="#">門市據點</a></li>
+            <li><a href ="dish_list.php">查看食譜</a><li>
+        </ul>
+    </nav>
+   
+    <main>
+  
+        <section class="news">
+            <h2>今天要吃什麽菜呢？</h2>
+            <p>我們爲您提供周到的食譜與采買服務</p>
+            <p><a href="dish_list.php">瞭解更多</a></p>
+        </section>
+
+        <section class="slogan">
+            <blockquote>"嚴選天然食材，<br>讓每一道菜無比鮮美"</blockquote>
+        </section>
+
+        <section class="shop">
+            <img src="images/食譜.jpg"alt="好煮藝食譜">
+            <div class="info">
+                <h2>依據現有食材推薦食譜，缺料提示與采買功能等</h2>
+                <p>專屬您本人的美食<br>最受歡迎的平臺優惠</p>
+            </div>
+        </section>
+
+        <section class="product">
+            <div>
+                <img src="images/皮蛋豆腐.jpg"alt="皮蛋豆腐">
+                <h3>皮蛋豆腐</h3>
+                <p>冰涼滑嫩，香濃皮蛋，一口清爽透心涼！</p>
+            </div>
+            <div>
+                <img src="images/番茄炒蛋.png"alt="番茄炒蛋">
+                <h3>番茄炒蛋</h3>
+                <p>家常中的經典，酸甜中的幸福滋味！</p>
+            </div>
+            <div>
+                <img src="images/黃燜鷄.jpg"alt="黃燜雞">
+                <h3>黃燜雞</h3>
+                <p>雞肉嫩到化口，醬香濃郁入骨！</p>
+            </div>
+        </section>
+
+        <section class="newsletter">
+            <p>歡迎訂閲</p>
+            <form>
+                <input type="email" placeholder="請輸入您的 Email" required>
+                <button type="submit">送出</button>
+            </form>
+        </section>
+<!-- 彈出式模態窗口 -->
+<div id="loginModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>會員登入</h2>
+    <form action="login.php" method="post">
+            <input type="number" name="phonenumber" placeholder="請輸入您的手機號碼" required>
+            <input type="password" name ="password" placeholder="請輸入密碼" required>
+            <button type="submit">登入</button>
+        </form>
+        <p>還沒有帳號？<a href="#" id="register-link">註冊</a></p>
+    </div>
+</div>
+<!-- 彈出式註冊模態窗口 -->
+<div id="registerModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>會員註冊</h2>
+        <form action="register.php" method="POST">
+            <input type="text" name="username" placeholder="請輸入姓名" required>
+            <input type="number" name="phonenumber" placeholder="請輸入您的手機號碼" required>
+            <input type="password" name ="password" placeholder="請設定密碼" required>
+            <button type="submit">註冊</button>
+        </form>
+        <p>已經有帳號了？<a href="#" id="login-link">登入</a></p>
+    </div>
+</div>
+    </main>
+
+    <footer>
+        <p>Copyright 2025 好煮藝 All Rights Reserved.</p>  
+    </footer>
+
+    <script>
+        const menuBtn = document.querySelector('.menu');// 漢堡菜單按鈕
+        const nav = document.querySelector('nav');// 導航菜單
+
+        menuBtn.addEventListener('click', function () {
+            nav.classList.toggle('active'); // 點擊漢堡按鈕，切換顯示菜單
+        });
+    </script>
+
+<script>
+    // 取得元素
+const modalLogin = document.getElementById('loginModal');
+const modalRegister = document.getElementById('registerModal');
+const memberSection = document.getElementById('member-section');
+const spanLogin = document.getElementsByClassName('close')[0];
+const spanRegister = document.getElementsByClassName('close')[1];
+const registerLink = document.getElementById('register-link');
+const loginLink = document.getElementById('login-link');
+
+// 點擊 "會員專區" 顯示登入模態窗口
+memberSection.addEventListener('click', function() {
+    modalLogin.style.display = "block";
+});
+
+// 點擊 X 或外部區域關閉登入模態窗口
+spanLogin.addEventListener('click', function() {
+    modalLogin.style.display = "none";
+});
+
+// 點擊 X 或外部區域關閉註冊模態窗口
+spanRegister.addEventListener('click', function() {
+    modalRegister.style.display = "none";
+});
+
+// 點擊 "註冊" 連結顯示註冊模態窗口
+registerLink.addEventListener('click', function(event) {
+    event.preventDefault();
+    modalLogin.style.display = "none";
+    modalRegister.style.display = "block";
+});
+
+// 點擊 "登入" 連結顯示登入模態窗口
+loginLink.addEventListener('click', function(event) {
+    event.preventDefault();
+    modalRegister.style.display = "none";
+    modalLogin.style.display = "block";
+});
+
+// 點擊外部區域也可以關閉模態窗口
+window.addEventListener('click', function(event) {
+    if (event.target === modalLogin) {
+        modalLogin.style.display = "none";
+    }
+    if (event.target === modalRegister) {
+        modalRegister.style.display = "none";
+    }
+});
+
+
+</script>
+</body>
+</html>
