@@ -1,0 +1,230 @@
+//---------------------------------------------------------------------------
+
+#include <vcl.h>
+#pragma hdrstop
+
+#include "Unit1.h"
+//---------------------------------------------------------------------------
+#pragma package(smart_init)
+#pragma resource "*.dfm"
+#define possible_direction 8
+#define MAX_SIZE 20
+
+TForm1 *Form1;
+int **maze;
+int **copyy;
+int **path_traced;
+int top=-1;
+int h, w, i, j, grid_size;
+int H,W;
+
+
+struct offset{
+	int dx;
+	int dy;
+};
+
+struct position{
+	int x,y;
+	int dir;
+};
+
+offset move2[8];
+int direction[possible_direction][2]={{-1,0}, {-1,1}, {0,1}, {1,1}, {1,0}, {1,-1}, {0,-1}, {-1,-1}};
+
+//---------------------------------------------------------------------------
+__fastcall TForm1::TForm1(TComponent* Owner)
+	: TForm(Owner)
+{
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm1::Button2Click(TObject *Sender)
+{
+FILE *fp; // Define fp as a pointer pointing to some file (with data type FILE) in HD
+
+ String out;
+
+ int m, n, i, j;
+
+ AnsiString infile;   // Use builder's string (AnsiString) to ease the conversion (into const char *)
+
+ if (OpenDialog1->Execute())
+
+ {   infile = OpenDialog1->FileName;
+
+   fp = fopen(infile.c_str(), "r+");
+
+        //c_str函数的傳回值是 const char *, 即把AnsiString轉成const char *給fopen使用
+
+  fscanf(fp, "%d %d", &m, &n);    // Read in two integers m & n
+
+  Memo1->Lines->Add("(m, n)="+IntToStr(m)+", "+IntToStr(n));
+
+  for (i=0; i<m; i++)    // Reda in m*n 0/1/2's into maze[][]
+
+   for (j=0; j<n; j++)
+
+    fscanf(fp, "%d", &maze[i][j]);
+
+  fclose(fp);
+
+  for (i=0; i<m; i++)      // Print out maze[][] in Memo1
+
+  {  out = "";
+
+   for (j=0; j<n; j++) out += "  "+IntToStr(maze[i][j]);
+
+   Memo1->Lines->Add(out);
+
+  }
+
+  // Print out maze[][] in StringGrid1
+
+  StringGrid1->RowCount = m;
+
+  StringGrid1->ColCount = n;
+
+  for (i=0; i<m; i++)
+
+	 for (j=0; j<n; j++)
+
+	 StringGrid1->Cells[j][i] = maze[i][j];
+	 StringGrid3->Cells[j][i] = maze[i][j];
+  }
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm1::StringGrid2DrawCell(TObject *Sender, int ACol, int ARow, TRect &Rect,
+          TGridDrawState State)
+{
+StringGrid2->Canvas->Brush->Color = clWhite;
+
+    StringGrid2->Canvas->Font->Color = clBlue;
+
+    StringGrid2->Canvas->FillRect(Rect);
+
+    AnsiString text = StringGrid2->Cells[ACol][ARow];
+
+	StringGrid2->Canvas->TextRect(Rect, Rect.Left+8, Rect.Top+8, text);
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm1::StringGrid2Click(TObject *Sender)
+{
+TRect Recto = StringGrid1->CellRect(StringGrid1->Col, StringGrid1->Row);
+
+     int width = Recto.Width();    int height = Recto.Height();
+
+	 Label1->Caption = "Cell: ["+IntToStr(StringGrid2->Col)+", "+IntToStr(StringGrid2->Row)+"] = "+StringGrid2->Cells[StringGrid2->Col][StringGrid2->Row];;
+
+     Label2->Caption = "Size: "+IntToStr(width)+"X"+IntToStr(height);
+
+     Label3->Caption = StringGrid1->Cells[StringGrid2->Col][StringGrid2->Row];
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm1::StringGrid3DrawCell(TObject *Sender, int ACol, int ARow, TRect &Rect,
+          TGridDrawState State)
+{
+AnsiString text = StringGrid1->Cells[ACol][ARow];
+
+    if (text == "0")
+
+		StringGrid3->Canvas->Brush->Color = TColor RGB(250, 245, 135) ;
+
+	else StringGrid3->Canvas->Brush->Color = TColor RGB(80, 80, 80);
+
+	StringGrid3->Canvas->FillRect(Rect);
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm1::Button3Click(TObject *Sender)
+{
+struct position stack[MAX_SIZE*MAX_SIZE];
+	int step=0, m, n, d, p, q, flag;
+
+	path_traced=new int *[h+2];
+	for(i=0;i<(h+2);i++)
+		path_traced[i]=new int [w+2];
+	for(i=0;i<(h+2);i++)
+		for(j=0;j<(w+2);j++)
+			path_traced[i][j]=0;     //init the copy maze for check
+
+	m=1;
+	n=0;
+	step=0;//start
+	do{
+		p=m;
+		q=n;//location and movement
+		d=0;//first direction
+		flag=0;//make sure is there a way
+		while(d<=7)
+		{
+			p=m+move2[d].dx;
+			q=n+move2[d].dy;
+			if(path_traced[p][q]==0 && maze[p][q]==0)//==1 no way / been walked through
+			{
+				path_traced[p][q]=1;
+				stack[step].x=p;
+				stack[step].y=q;
+				stack[step].dir=d;
+				m=p;
+				n=q;
+				step+=1;
+				flag=1;//there is a way
+				d=0;
+				break;
+			}
+			d+=1;
+		}
+
+		if(flag==0)//no way out ->back to previous step
+		{
+			step-=1;
+			if(step==-1)
+			{
+				Form1->Memo1->Lines->Add("THERE IS NO WAY OUT!");
+				break;
+			}
+			m=m-move2[stack[step].dir].dx;
+			n=n-move2[stack[step].dir].dy;
+		}
+	}while(stack[step-1].x!=h || stack[step-1].y!=w);//not yet walk to the end
+
+	//update
+	for(i=0;i<(h+2);i++)
+	{
+       for(j=0;j<(w+2);j++)
+	   {
+			if(path_traced[i][j]==1)
+				maze[i][j]=3;//been walked
+	   }
+	}
+
+	for(i=0;i<step;i++)
+		maze[stack[i].x][stack[i].y]=4;//route
+
+	if(step!=-1)
+	{
+		maze[h][w+1]=4;
+        maze[1][0]=4;
+    }
+
+
+	Form1->Memo1->Lines->Add("=======Path("+IntToStr(h)+","+IntToStr(w)+")=======");
+	for(i=0;i<(h+2);i++)
+	{
+		String s;
+		for(j=0;j<(w+2);j++)
+			s+="  "+IntToStr(maze[i][j]);
+		Form1->Memo1->Lines->Add(s);
+	}
+	for(i=0;i<(h+2);i++)
+	{
+		 for(j=0;j<(w+2);j++)
+		 {
+			 StringGrid2->Cells[j][i] = maze[i][j];
+			 StringGrid3->Cells[j][i] = maze[i][j];
+         }
+
+	}
+
+
+}
+//---------------------------------------------------------------------------
