@@ -1,0 +1,473 @@
+//---------------------------------------------------------------------------
+
+#include <vcl.h>
+#pragma hdrstop
+#include <stdlib.h>
+#include "Unit1.h"
+//---------------------------------------------------------------------------
+#pragma package(smart_init)
+#pragma resource "*.dfm"
+TForm1 *Form1;
+
+struct node{
+	int data;
+	struct node *next;
+	struct node *link;
+};
+
+struct stacknode{
+	int data;
+	struct stacknode *link;
+};
+
+struct queuenode {
+	int data;
+	struct queuenode *next;
+};
+
+
+
+struct node *header;
+struct node *first;
+struct node *last;
+struct stacknode *top;
+struct queuenode *front ,*rear;
+
+
+
+struct node *newnode(int element)
+{
+	struct node *p=new struct node;
+
+	p->data=element;
+	p->next=NULL;
+	return p;
+}
+
+struct stacknode *newnodenode(int element)
+{
+	stacknode *p=new struct stacknode;
+
+	if(p==NULL)
+	{
+		Form1->Memo1->Lines->Add("memory not enough");
+	}
+	else{
+		p->data=element;
+		p->link=NULL;
+		return p;
+    }
+
+
+
+}
+
+struct queuenode *newnodex(char element)
+{
+	struct queuenode *p;
+	p=new struct queuenode;
+
+	p->data=element;
+	p->next=NULL;
+	return p;
+}
+
+void push(int element)
+{
+	stacknode *x;
+	x=newnodenode(element);
+	if(top==NULL)
+		top =x;
+	else {
+		x->link =top;
+		top=x;
+	}
+
+}
+
+
+
+
+
+void insertfirst(node *p,int element)
+{
+	struct node *x;
+	x=new struct node;
+
+	if(p==NULL)
+	{
+	   x->data=element;
+	   first=x;
+	   x->next=NULL;
+	}
+	else
+	{
+    	x->data=first->data;
+		first->data=element;
+		x->next=p->next;
+		p->next=x;
+	}
+
+}
+
+void insertlast(node *p,int element)
+{
+	struct node *x;
+	x=new struct node;
+	x->data=element;
+	x->next=NULL;
+
+	if(p==NULL)
+	{
+	   first=x;
+	   x->next=NULL;
+	   return;
+
+	}
+	else{
+		while(p->next!=NULL)
+		{
+			p=p->next;
+		}
+		p->next=x;
+	}
+	}
+
+struct node* searchdata(int target)
+{
+	struct node *p;
+	p=first;
+
+	while((p!=NULL)&& (p->data!=target))
+		p=p->next;
+	return p;
+}
+
+
+
+void insertafter(struct node *p,int element)
+{
+	node *x=newnode(element);
+	x->next=p->next;
+	p->next=x;
+}
+
+void insertbefore(node *p,int element)
+{
+	int copy=p->data;
+    p->data=element;
+	node *x=newnode(copy);
+	x->next=p->next;
+	p->next=x;
+
+}
+
+
+int searchanddelete(int target)
+{
+	node *p,*q;
+	p=first;
+	q=NULL;
+	while((p!=NULL)&& (p->data !=target))
+	{
+		q=p;
+		p=p->next;
+	}
+	if(p==NULL)
+		return -1;
+	if(p==first)
+		first=p->next;
+	else q->next=p->next;
+	free(p);
+	return target;
+}
+
+void insertqueue(char element)
+{
+	struct queuenode *p;
+	p=newnodex(element);
+	if(rear==NULL)
+		front=p;
+	else
+		rear->next=p;
+        rear=p;
+}
+
+int deletequeue()
+{
+	queuenode *p;
+	int element;
+	if(front==NULL)
+	{
+        rear=NULL;
+		return -1;
+	}
+	else
+	{
+		p=front;
+		front=front->next;
+		element=p->data;
+		free(p);
+		return element;
+	}
+
+}
+
+
+
+void printlist(node *first)
+{
+	struct node *p;
+	String list ="";
+	for ((p=first); p!=NULL; p=p->next)
+	{
+	   list+=IntToStr(p->data)+"->";
+	}
+	Form1->Memo1->Lines->Add(list+"<");
+
+}
+
+void printstack(stacknode *first)
+{
+	struct stacknode *p;
+	String list ="";
+	for ((p=top); p!=NULL; p=p->link)
+	{
+	   list+=IntToStr(p->data)+"->";
+	}
+	Form1->Memo1->Lines->Add(list+"<");
+
+}
+
+void printqueue(queuenode *f)
+{
+	struct queuenode *p;
+	String list ="";
+	for ((p=f); p!=NULL; p=p->next)
+	{
+	   list+=IntToStr(p->data)+"->";
+	}
+	Form1->Memo1->Lines->Add(list+"<");
+
+}
+
+
+
+ int pop()
+{
+	stacknode *p;
+	if(top==NULL)
+	{
+		Form1->Memo1->Lines->Add("stack is empty!");
+	}
+	else
+	{
+		p=top;
+		top=top->link;
+		int data=p->data;
+		free(p);
+		return data;
+	}
+}
+
+void reverse(node *first)
+ {
+	 struct node *r,*s,*t;
+	 r=first;
+	 s=NULL;
+	 while(r!=NULL)
+	 {
+		 t=s;
+		 s=r;
+		 r=r->next;
+		 s->next=t;
+	 }
+
+	 first=s;
+	 struct node *p;
+	String list ="";
+	for ((p=s); p!=NULL; p=p->next)
+	{
+	   list+=IntToStr(p->data)+"->";
+	}
+	Form1->Memo1->Lines->Add(list+"<");
+
+
+ }
+
+
+
+//---------------------------------------------------------------------------
+__fastcall TForm1::TForm1(TComponent* Owner)
+	: TForm(Owner)
+{
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm1::Button1Click(TObject *Sender)
+{
+int data =StrToInt(Edit1->Text);
+
+	insertfirst(first,data);
+	printlist(first);
+
+
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm1::Button7Click(TObject *Sender)
+{
+int a=0;
+	int n= StrToInt(Edit3->Text);
+	int m= StrToInt(Edit4->Text);
+	for( int i=0;i<n;i++)
+	{
+		a=rand()%m;
+		insertlast(first,a);
+	}
+	printlist(first);
+
+
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm1::Button2Click(TObject *Sender)
+{
+   int data =StrToInt(Edit1->Text);
+	insertlast(first,data);
+	printlist(first);
+
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm1::Button3Click(TObject *Sender)
+{
+int target=StrToInt(Edit2->Text);
+	node *p;
+	p= searchdata(target);
+
+	if(!p)
+		Form1->Memo1->Lines->Add(IntToStr(target)+" not found!");
+	else
+	{
+		Form1->Memo1->Lines->Add(IntToStr(target)+" found!");
+	}
+
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm1::Button4Click(TObject *Sender)
+{
+int target= StrToInt(Edit2->Text);
+int element=StrToInt(Edit1->Text);
+	  node *p;
+	  p= searchdata(target);
+
+	  if(!p)
+	  {
+		 Form1->Memo1->Lines->Add(IntToStr(target)+" not found!");
+	  }
+
+	  else
+	  {
+		Form1->Memo1->Lines->Add(IntToStr(target)+" found!");
+		insertafter(p,element);
+		printlist(first);
+	  }
+
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm1::Button5Click(TObject *Sender)
+{
+  int target= StrToInt(Edit2->Text);
+int element=StrToInt(Edit1->Text);
+	  node *p;
+	  p= searchdata(target);
+
+	  if(!p)
+	  {
+		 Form1->Memo1->Lines->Add(IntToStr(target)+" not found!");
+	  }
+
+	  else
+	  {
+		Form1->Memo1->Lines->Add(IntToStr(target)+" found!");
+		insertbefore(p,element);
+		printlist(first);
+	  }
+
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm1::Button8Click(TObject *Sender)
+{
+	node *p =first->next;
+	if(!first)
+		 Form1->Memo1->Lines->Add("there is no linked list!");
+	else
+	{
+        first=NULL;
+		printlist(first);
+		free(p);
+    }
+
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm1::Button6Click(TObject *Sender)
+{
+int target= StrToInt(Edit2->Text);
+	int delet=-1;
+	delet=searchanddelete(target);
+	if(delet!=-1)
+	{
+		Form1->Memo1->Lines->Add(IntToStr(target)+" deleted!");
+		printlist(first);
+	}
+	else
+	  Form1->Memo1->Lines->Add(IntToStr(target)+" not found!");
+
+
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm1::Button9Click(TObject *Sender)
+{
+int element=StrToInt(Edit5->Text);
+		push(element);
+		printstack(top);
+
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm1::Button10Click(TObject *Sender)
+{
+int data;
+data=pop();
+if(top!=NULL)
+	Form1->Memo1->Lines->Add(IntToStr(data));
+else
+	Form1->Memo1->Lines->Add(NULL);
+printstack(top);
+
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm1::Button11Click(TObject *Sender)
+{
+int  data=StrToInt(Edit6->Text);
+	insertqueue(data);
+	printqueue(front);
+
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm1::Button12Click(TObject *Sender)
+{
+	int data;
+	data=deletequeue();
+	if(data==-1)
+		Form1->Memo1->Lines->Add("queue is empty!");
+	else
+	{
+		Form1->Memo1->Lines->Add(IntToStr(data));;
+		printqueue(front);
+	}
+
+
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm1::Button13Click(TObject *Sender)
+{
+reverse(first);
+}
+//---------------------------------------------------------------------------
