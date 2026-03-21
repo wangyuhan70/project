@@ -1,0 +1,245 @@
+//---------------------------------------------------------------------------
+
+#include <vcl.h>
+#pragma hdrstop
+#include<stdio.h>
+#include<time.h>
+
+#include "Unit1.h"
+//---------------------------------------------------------------------------
+#pragma package(smart_init)
+#pragma resource "*.dfm"
+TForm1 *Form1;
+int **G;
+int *dis,*last;
+bool *found;
+int n,r;
+//---------------------------------------------------------------------------
+__fastcall TForm1::TForm1(TComponent* Owner)
+	: TForm(Owner)
+{
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm1::Button1Click(TObject *Sender)
+{
+int n=StrToInt(Edit1->Text);
+int range=StrToInt(Edit2->Text);
+int maxrange=StrToInt(Edit3->Text);
+int largeint=StrToInt(Edit4->Text);
+srand(time(NULL));
+
+if(G!=0)
+{
+for(int i=0;i<n;i++)
+{
+	delete G[i];
+}
+delete G;
+}
+
+G=new int*[n];
+for (int i=0;i<n;i++){
+	G[i]=new int [n];
+}
+
+for(int i=0;i<n;i++)
+{
+	for(int j=i+1;j<n;j++)
+	{
+		G[i][j]=rand()%range+1;
+		if(G[i][j]>maxrange)
+		{
+			G[i][j]=largeint;
+		}
+		G[j][i]=G[i][j];
+	}
+	G[i][i]=largeint;
+}
+
+StringGrid1->FixedCols=0;
+StringGrid1->FixedRows=0;
+
+StringGrid1->RowCount=n+1;
+StringGrid1->ColCount=n+1;
+
+
+for (int i = 1; i < StringGrid1->RowCount; ++i) {
+	StringGrid1->Cells[0][i] = IntToStr(i)-1;
+}
+
+
+for (int i = 1; i < StringGrid1->ColCount; ++i) {
+	StringGrid1->Cells[i][0] = IntToStr(i)-1;
+}
+
+
+for(int i=1;i<n+1;i++)
+{
+	for(int j=1;j<n+1;j++)
+	{
+		StringGrid1->Cells[i][j]=G[i-1][j-1];
+	}
+}
+
+}
+
+bool AllFound()
+{
+	bool flag = true;
+	for(int i=0;i<n;i++)
+		if(!found[i])
+			flag = false;
+
+	return flag;
+}
+
+void singlesource(int source)
+{
+	n=StrToInt(Form1->Edit1->Text);
+	if(dis != NULL)
+		delete dis;
+	if(found != NULL)
+		delete found;
+	if(last != NULL)
+		delete last;
+	dis = new int[n];
+	found = new bool[n];
+	last = new int[n];
+
+	for(int i=0;i<n;i++)
+		dis[i] = G[source][i];
+	for(int i=0;i<n;i++)
+		found[i] = false;
+	for(int i=0;i<n;i++)
+		last[i] = source;
+
+	found[source] = true;
+	dis[source] = 0;
+
+	Form1->StringGrid2->RowCount = n+1;
+	Form1->StringGrid2->ColCount = n+2;
+
+	int minimum = StrToInt(Form1->Edit4->Text);
+	int round = 0;
+
+	while(!AllFound() && round<n)
+	{
+		for(int i=0;i<n+1;i++)
+			Form1->StringGrid2->Cells[round+1][i+1] = dis[i];
+
+		int k;
+
+		for(int i=0;i<n;i++)
+			if(dis[i]<minimum && !found[i]) k = i;
+
+		found[k]  = true;
+
+		for(int i=0;i<n;i++)
+			if(!found[i] && dis[k]+G[k][i] < dis[i])
+			{
+				last[i] = k;
+				dis[i] = dis[k]+G[k][i];
+			}
+
+		round++;
+	}
+
+	for(int i=0;i<n+1;i++)
+	{
+		Form1->StringGrid2->Cells[0][i+1] = i;
+		Form1->StringGrid2->Cells[i+1][0] = i;
+	}
+
+	Form1->StringGrid2->ColCount = round+2;
+	Form1->StringGrid2->Cells[round+1][0] = "From";
+
+	for(int i=0;i<n;i++)
+		Form1->StringGrid2->Cells[round+1][i+1] = last[i];
+	if(Form1->CheckBox1->Checked)
+	{
+        	String result = "";
+
+	for(int des=0;des<n;des++)
+	{
+		if(dis[des] >= 99999)
+			Form1->Memo1->Lines->Add("It has no any path from " + IntToStr(source) + " to " + IntToStr(des) + " !");
+		else
+		{
+			int now,prev;
+			result = IntToStr(des);
+			for(now=des,prev=last[now];prev!=source;now=prev,prev=last[now])
+				result = IntToStr(prev) + "-[" + IntToStr(G[prev][now]) + "]-> " + result;
+			if(prev == now)
+				result = "The shortest path from " + IntToStr(source) + " to " + IntToStr(des) + " is " + IntToStr(dis[des]) + " with path " + IntToStr(source) + " -[" + 0 + "]-> " +result;
+			else
+				result = "The shortest path from " + IntToStr(source) + " to " + IntToStr(des) + " is " + IntToStr(dis[des]) + " with path " + IntToStr(source) + " -[" + IntToStr(G[source][now]) + "]-> " +result;
+
+			Form1->Memo1->Lines->Add(result);
+
+		}
+	}
+	}
+
+}
+
+
+void allpairs()
+{
+  Form1->StringGrid3->RowCount = n+1;
+	Form1->StringGrid3->ColCount = n+1;
+	Form1->StringGrid4->RowCount = n+1;
+	Form1->StringGrid4->ColCount = n+1;
+
+	for(int i=0;i<n;i++)
+	{
+		singlesource(i);
+
+		for(int j=0;j<n;j++)
+		{
+			Form1->StringGrid3->Cells[j+1][i+1] = dis[j];
+			Form1->StringGrid3->Cells[j+1][0] = j;
+			Form1->StringGrid3->Cells[0][j+1] = j;
+			Form1->StringGrid4->Cells[j+1][i+1] = last[j];
+			Form1->StringGrid4->Cells[j+1][0] = j;
+			Form1->StringGrid4->Cells[0][j+1] = j;
+		}
+	}
+}
+
+//---------------------------------------------------------------------------
+void __fastcall TForm1::Button2Click(TObject *Sender)
+{
+   int source=StrToInt(Edit5->Text);
+   singlesource(source);
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm1::Button3Click(TObject *Sender)
+{
+allpairs();
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm1::Button4Click(TObject *Sender)
+{
+allpairs();
+	Form1->StringGrid5->RowCount = n+1;
+	Form1->StringGrid5->ColCount = n+1;
+
+	for(int i=1;i<n+1;i++)
+	{
+		for(int j=1;j<n+1;j++)
+		{
+			if(StrToInt(Form1->StringGrid3->Cells[i][j]) < 99999)
+				Form1->StringGrid5->Cells[i][j] = 1;
+			else
+				Form1->StringGrid5->Cells[i][j] = 0;
+
+			Form1->StringGrid5->Cells[j][0] = j-1;
+			Form1->StringGrid5->Cells[0][j] = j-1;
+		}
+	}
+}
+//---------------------------------------------------------------------------
+
+
