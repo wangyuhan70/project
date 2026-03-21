@@ -19,16 +19,15 @@ $\ R^2 \$
 
 ## 5.資料結構課程--演算法實作練習
    用c++實作資料結構課程中學習的演算法概念，包含：
-   #### a.Selection Sort, Bubble Sort and Binary Search
-   #### b.Magic Square
+   #### a.Magic Square
         隨機輸入一奇數n，並生成一nxn大小矩陣，使得矩陣列、行、對角各數字加總的值皆一樣
-   #### c.Mouse in a maze
+   #### b.Mouse in a maze
         用try and error使老鼠走出一nxn的二元矩陣
-   #### d.Singly Linked List
+   #### c.Singly Linked List
         在環狀串列中新增、搜尋元素
-   #### e.Binary Search Tree
+   #### d.Binary Search Tree
         手動新增、隨機新增元素在二元搜尋樹中，以及將元素進行infix, prefix, postfix的排序
-   #### f.Shortest Path
+   #### e.Shortest Path
       　隨機生成一有向圖矩陣，並計算點與點之間的最短距離
-   #### g.Performance Evaluation for Sorting Algorithms
+   #### f.Performance Evaluation for Sorting Algorithms
         實作八種排序演算法，並比較其CPU執行時間
